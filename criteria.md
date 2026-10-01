@@ -24,7 +24,8 @@ data earns credit; *"80% seemed reasonable"* does not.
 Given a query that matches at least one listing, the agent completes all three
 tool calls and returns a fit card — in at least 4 of 5 tries.
 
-**Why this target:**
+**Why this target:**  Reason: I chose 4 of 5 because the agent needs to complete several steps, and a failure in one tool or model call could prevent the full process from completing.
+
 <!-- Why 4 of 5 and not 5 of 5? Something about your search, probably —
      "my search is a plain keyword match and some phrasings will miss" is a
      real answer. -->
@@ -36,13 +37,18 @@ tool calls and returns a fit card — in at least 4 of 5 tries.
 Given a query that matches no listings, the agent stops before calling
 `suggest_outfit` and returns a message naming what to change — 5 of 5 tries.
 
-**Why this target:**
+**Why this target:** I chose 5 of 5 because if no listing is found, the agent should always stop instead of continuing with missing information or generating something that was not found in the search.
 <!-- Why is 5 of 5 reasonable here when criterion 1 isn't? What's different
      about this path? -->
 
 ---
 
 ## 3. Something about state
+
+Given a query that returns at least one listing, the listing `id` selected by `search_listings` must match the listing `id` received by `suggest_outfit` — 5 of 5 tries.
+
+**Why this target:** I chose 5 of 5 because passing the wrong item to the next tool would make the rest of the agent operate on incorrect information.
+
 
 <!-- YOU WRITE THIS ONE.
 
@@ -55,14 +61,14 @@ Given a query that matches no listings, the agent stops before calling
      suggest_outfit is the shape you're after. -->
 
 
-
-**Why this target:**
-
-
-
 ---
 
 ## 4. Something about the fit card
+
+Given a query that returns a fit card, the fit card must include the correct price and platform — 5 of 5 tries.
+
+**Why this target:**
+I chose 5 of 5 because the price and platform are factual information supplied to the model and shouldn't change.
 
 <!-- YOU WRITE THIS ONE.
 
@@ -77,13 +83,17 @@ Given a query that matches no listings, the agent stops before calling
 
 
 
-**Why this target:**
+
 
 
 
 ---
 
 ## 5. Your choice
+
+Given a query that includes a size and maximum price, every listing returned by `search_listings` must have the correct size and not exceed the maximum price — in at least 4 of 5 tries.
+
+**Why this target:** I chose 4 of 5 because size matching can be less straightforward since sizes are represented in different formats in the listings. The maximum price should still be respected because it is a clear numeric limit.
 
 <!-- YOU WRITE THIS ONE TOO.
 
@@ -92,13 +102,7 @@ Given a query that matches no listings, the agent stops before calling
      search respects a price ceiling — anything, as long as it names a number
      or an observable outcome. -->
 
-
-
-**Why this target:**
-
-
-
----
+--
 
 <!-- ─────────────────────────────────────────────────────────────────────────
      UNIT 4 — read this before you change anything above.

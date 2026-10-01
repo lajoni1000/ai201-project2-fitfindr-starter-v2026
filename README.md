@@ -59,24 +59,25 @@
 
 ### `search_listings`
 
-- **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Searches the local clothing listings for items that match the description, with optional size and maximum price filters.
+- **Inputs:** `description` (str), `size` (str | None), `max_price` (float | None).
+- **Returns:** A list of complete matching listing dictionaries. Each dictionary includes `id`, `title`, `description`, `category`, `style_tags`, `size`, `condition`, `price`, `colors`, `brand`, and `platform`.
+- **When it has nothing:** Returns an empty list `[]` when no listings match the search.
 
 ### `suggest_outfit`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Suggests two outfits around the selected listing, using items from the user's wardrobe when available.
+- **Inputs:** `new_item` (dict), `wardrobe` (dict).
+- **Returns:** A non-empty string containing two outfit suggestions. When wardrobe items are available, the suggestions name pieces from the wardrobe.
+- **When it has nothing:** If the wardrobe is empty, returns general outfit ideas and explains that the suggestions are general because no wardrobe items are saved.
 
 ### `create_fit_card`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Creates a short social-media-style caption about the selected second-hand item and how it can be worn.
+- **Inputs:** `outfit` (str), `new_item` (dict).
+- **Returns:** A string containing a 2–4 sentence caption that includes the item's price in digits and the selling platform.
+- **When it has nothing:** If `outfit` is empty or contains only whitespace, returns a helpful fallback message without calling the model or raising an exception.
+
 
 ---
 
@@ -93,8 +94,7 @@
      The grader checks your code against what you claim here, so the file and
      function have to be real. -->
 
-**Branch rule:**
-
+**Branch rule:** If `search_listings` returns an empty list, put a message in the session and stop. Otherwise, take the first result and go to `suggest_outfit`.
 **Where it lives:** `agent.py::run_agent`
 
 **How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->

@@ -41,7 +41,7 @@
 
 <!-- Three or four sentences: what a user asks for, and what they get back. -->
 
-
+FitFindr is an agent that helps a user find a clothing item from a set of secondhand listings and decide how to style it. A user can describe what they are looking for and optionally include a size and maximum price. The agent searches the listings, selects a matching item, suggests two outfits using pieces from the user's wardrobe, and creates a short fit card with information about the selected item. If there are no matching listings, the agent stops and tells the user what they could change in their search.
 
 ---
 
@@ -98,9 +98,10 @@
 **Where it lives:** `agent.py::run_agent`
 
 **How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
+The query is parsed with regular expressions and string cleanup. The parser looks for a maximum price written as “under $X” or “under X” and for a size written as “size X.” Those parts are removed from the query, along with common introductory words such as “looking for,” and the remaining text becomes the description used by search_listings.
 
 **What moves through the session:** <!-- which fields, in what order -->
-
+The session starts with the original query and wardrobe. The parsed description, size, and maximum price are stored in session["parsed"]. Search results are stored in session["search_results"], and the first result is stored as session["selected_item"]. That selected item is read from the session by suggest_outfit, and its result is stored in session["outfit_suggestion"]. Finally, create_fit_card reads the outfit suggestion and selected item from the session, and the result is stored in session["fit_card"]. If no listings are found, session["error"] is set and the agent stops before the remaining tools are called.
 ---
 
 ## Sample Run
@@ -113,7 +114,40 @@
 **One full query**
 
 ```
-$ python app.py ask '...'
+python app.py ask "looking for a vintage graphic tee under `$30"
+
+  Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
+
+  Outfit:   Here are two distinct outfit combinations built around your new Y2K butterfly baby tee, using pieces straight from your wardrobe:
+
+### Outfit 1: Streetwear Contrast (Y2K Meets Grunge)
+This look plays on the contrast between the fitted, feminine butterfly tee and relaxed, edgy streetwear staples. 
+
+*   **Top:** Y2K Butterfly Baby Tee (layered over or under your white ribbed tank top for a textured neckline, if you like)
+*   **Bottoms:** Baggy straight-leg jeans (dark wash)
+*   **Outerwear:** Black cropped zip hoodie (worn open to show off the graphic)
+*   **Shoes:** Chunky white sneakers
+*   **Accessories:** Black crossbody bag
+
+**Why it works:** The dark, baggy jeans and chunky sneakers ground the sugary-sweet pink and purple butterfly print, giving it an authentic early-2000s street style feel. Adding the black cropped zip hoodie ties the dark accents of the shoes and bag together while keeping the cropped silhouette balanced.
+
+---
+
+### Outfit 2: Elevated Earth Tones (Soft Cottagecore & Minimal)
+This look leans into the softer, cottagecore-adjacent side of the tee by pairing it with warm neutrals for a more polished, everyday outfit.
+
+*   **Top:** Y2K Butterfly Baby Tee
+*   **Bottoms:** Wide-leg khaki trousers 
+*   **Accessories (Belt):** Brown leather belt (threaded through the trousers to define the waist)
+*   **Outerwear:** Vintage black denim jacket (draped over the shoulders or worn casually)
+*   **Shoes:** Chunky white sneakers (or swap for black combat boots to add a tougher edge)
+*   **Accessories (Bag):** Black crossbody bag
+
+**Why it works:** Khaki and white make a classic, clean base that lets the pink and purple tones of the butterfly graphic pop. Tucking the fitted baby tee into the high-waisted wide-leg trousers creates a flattering proportion, and the brown leather belt adds a touch of vintage warmth that bridges the gap between the white tee and tan bottoms.
+
+  Fit card: Just scored this adorable butterfly baby tee for only $18 on depop, and I’m so obsessed! I styled it two ways—first with baggy denim for that ultimate Y2K grunge look, and again with wide-leg trousers for a softer, elevated vibe. Which fit is your favorite? 🦋✨
+
+0 model calls this session, 2 served from cache
 
 ```
 
@@ -173,15 +207,15 @@ Nothing beats the effortless cool of these vintage Levi's 501 jeans, complete wi
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked ChatGPT to help me review my `search_listings` implementation and test whether the size filter worked with the listings data.
+- *What came back:* We found that sizes in the data are not always stored as a single value. For example, a listing can have `S/M`, so an exact comparison with `M` would miss an item that should match.
+- *What I changed:* I changed the size comparison so it is case-insensitive and splits combined sizes such as `S/M`. I then tested `search_listings` from the terminal and confirmed that a search for size `M` could return the `S/M` listing.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked ChatGPT to coach me through connecting the three tools in `run_agent` while keeping the session as the source of state between the tools.
+- *What came back:* We identified that after `search_listings`, the agent needed an explicit branch for an empty result instead of continuing to the outfit and fit-card tools.
+- *What I changed:* I added the branch so that an empty search stores an actionable error message in the session and returns immediately. For a successful search, I store the first result in `session["selected_item"]` and use the session values for the next tool calls. I tested both paths and confirmed that the no-match path stops with `fit_card` still set to `None`.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 

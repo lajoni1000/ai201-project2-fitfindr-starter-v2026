@@ -24,7 +24,7 @@ data earns credit; *"80% seemed reasonable"* does not.
 Given a query that matches at least one listing, the agent completes all three
 tool calls and returns a fit card — in at least 4 of 5 tries.
 
-**Why this target:**  Reason: I chose 4 of 5 because the agent needs to complete several steps, and a failure in one tool or model call could prevent the full process from completing.
+**Why this target:** I chose 4 of 5 because the agent needs to complete several steps, and a failure in one tool or model call could prevent the full process from completing.
 
 <!-- Why 4 of 5 and not 5 of 5? Something about your search, probably —
      "my search is a plain keyword match and some phrasings will miss" is a
@@ -67,8 +67,7 @@ Given a query that returns at least one listing, the listing `id` selected by `s
 
 Given a query that returns a fit card, the fit card must include the correct price and platform — 5 of 5 tries.
 
-**Why this target:**
-I chose 5 of 5 because the price and platform are factual information supplied to the model and shouldn't change.
+**Why this target:** I chose 5 of 5 because the price and platform are factual information supplied to the model and shouldn't change.
 
 <!-- YOU WRITE THIS ONE.
 

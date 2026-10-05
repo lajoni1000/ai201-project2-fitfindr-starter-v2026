@@ -60,7 +60,7 @@
 ### `search_listings`
 
 - **What it does:** Searches the local clothing listings for items that match the description, with optional size and maximum price filters.
-- **Inputs:** `description` (str), `size` (str | None), `max_price` (float | None).
+- **Inputs:** `description` (str), `size` (str | None), `max_price` (float | None). Size matching is case-insensitive, and `M` can match a combined size like `S/M`.
 - **Returns:** A list of complete matching listing dictionaries. Each dictionary includes `id`, `title`, `description`, `category`, `style_tags`, `size`, `condition`, `price`, `colors`, `brand`, and `platform`.
 - **When it has nothing:** Returns an empty list `[]` when no listings match the search.
 
@@ -120,17 +120,43 @@ $ python app.py ask '...'
 **The three tools, tested one at a time**
 
 ```
-$ python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
+
+python -c "from tools import search_listings; print([(x['id'], x['title'], x['size'], x['price']) for x in search_listings('graphic tee', size='M', max_price=30)])"
+[('lst_002', 'Y2K Baby Tee — Butterfly Print', 'S/M', 18.0), ('lst_017', 'Mesh Long-Sleeve Top — Black', 'S/M', 15.0)]
 
 ```
 
 ```
-$ python -c "from tools import suggest_outfit; ..."
+python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
+Here are two distinct outfit combinations built around your new vintage Levi's 501s, using pieces you already own:
+
+### Outfit 1: Casual Streetwear Sporty
+This look leans into the vintage streetwear vibe of the 501s by pairing them with sporty, contrasting layers and chunky sneakers. 
+
+*   **Bottoms:** Vintage Levi's 501 Jeans (Medium Wash)
+*   **Top:** White ribbed tank top (tucked in to define the waist)
+*   **Outerwear:** Black cropped zip hoodie (layered open over the tank)
+*   **Shoes:** Chunky white sneakers
+*   **Accessories:** Black crossbody bag
+
+**Why it works:** The fitted white tank creates a clean, minimal base that balances the relaxed straight leg of the Levi's. Throwing the black cropped zip hoodie on top plays with proportions (fitted vs. cropped), and the chunky white sneakers tie the whole streetwear aesthetic together with the denim.
+
+---
+
+### Outfit 2: Grunge-Infused Vintage Classic
+This look highlights the vintage, slightly worn-in character of the medium wash denim by pairing it with darker, textured layers and rugged boots.
+
+*   **Bottoms:** Vintage Levi's 501 Jeans (Medium Wash)
+*   **Top:** Oversized grey crewneck sweatshirt 
+*   **Outerwear:** Vintage black denim jacket (worn over the sweatshirt)
+*   **Shoes:** Black combat boots
+*   **Accessories:** Brown leather belt
+
+**Why it works:** Double denim is a classic vintage move, and pairing a medium wash with a black denim jacket creates a cool contrast without being too matchy. The oversized grey crewneck adds a cozy, effortless texture underneath, while the brown leather belt and black combat boots ground the outfit with a touch of grunge edge.
 
 ```
-
-```
-$ python -c "from tools import create_fit_card; ..."
+python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
+Nothing beats the effortless cool of these vintage Levi's 501 jeans, complete with that perfectly worn-in knee fading. I styled them with crisp white sneakers for the ultimate off-duty streetwear look that screams timeless casual. Grab this medium wash staple for just $38.0 over on my depop before someone else snatches them up!
 
 ```
 

@@ -78,8 +78,48 @@ def search_listings(
     Test it from a terminal before you move on:
         python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
     """
-    # TODO: replace this with your implementation
-    return []
+    listings = load_listings()
+    results = []
+
+    for listing in listings:
+        if max_price is not None and listing["price"] > max_price:
+            continue
+
+        if size is not None:
+            listing_size = listing["size"].lower()
+            size_parts = listing_size.split()[0].split("/")
+
+            if size.lower() not in size_parts:
+                continue
+        
+        # Break the user's description into individual keywords
+        query_words = description.lower().split()
+
+        # Build searchable text from the listing
+        searchable_text = " ".join([
+            listing["title"],
+            listing["description"],
+            listing["category"],
+            " ".join(listing["style_tags"]),
+            " ".join(listing["colors"]),
+        ]).lower()
+
+        # Count how many query words appear in the listing
+        score = sum(1 for word in query_words if word in searchable_text)
+
+        # Ignore listings that don't match any query word
+        if score == 0:
+            continue
+
+        results.append((score, listing))
+
+    results.sort(key=lambda item: item[0], reverse=True)
+
+    return [
+        listing
+        for score, listing in results[:config.SEARCH_RESULT_LIMIT]
+]
+    
 
 
 # ── Tool 2: suggest_outfit ────────────────────────────────────────────────────
@@ -113,8 +153,44 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
         python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
     """
     # TODO: replace this with your implementation
-    return ""
+    wardrobe_items = wardrobe.get("items", [])
 
+    if not wardrobe_items:
+        prompt = f"""
+Suggest two general outfit ideas for this thrifted item:
+
+Item: {new_item['title']}
+Description: {new_item['description']}
+Colors: {', '.join(new_item['colors'])}
+Style: {', '.join(new_item['style_tags'])}
+
+The user has no saved wardrobe items, so give general styling ideas.
+Clearly mention that these are general suggestions because the wardrobe is empty.
+"""
+        return generate(prompt)
+    
+    wardrobe_text = "\n".join(
+        f"- {item['name']} ({item['category']}): "
+        f"{', '.join(item['colors'])}; "
+        f"{', '.join(item['style_tags'])}"
+        for item in wardrobe_items
+    )
+
+    prompt = f"""
+Suggest two outfits built around this thrifted item:
+
+New item: {new_item['title']}
+Description: {new_item['description']}
+Colors: {', '.join(new_item['colors'])}
+Style: {', '.join(new_item['style_tags'])}
+
+The user already owns these wardrobe pieces:
+{wardrobe_text}
+
+Suggest two specific outfit combinations.
+Use and name pieces from the user's wardrobe when possible.
+"""
+    return generate(prompt)
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
 
@@ -152,5 +228,25 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
     Test it from a terminal before you move on:
         python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
     """
-    # TODO: replace this with your implementation
-    return ""
+    if not outfit.strip():
+        return "I couldn't create a fit card because no outfit suggestion was provided."
+
+    prompt = f"""
+Write a short social-media-style fit card about this thrifted find.
+
+Item: {new_item['title']}
+Description: {new_item['description']}
+Price: ${new_item['price']}
+Platform: {new_item['platform']}
+Style: {', '.join(new_item['style_tags'])}
+
+Outfit:
+{outfit}
+
+Write 2 to 4 sentences.
+Mention the item, its price in digits, and the platform once each.
+Describe the specific vibe of the outfit.
+Make it sound like a real social media caption, not a product description.
+"""
+
+    return generate(prompt)

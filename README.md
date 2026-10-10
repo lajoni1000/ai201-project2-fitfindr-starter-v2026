@@ -299,13 +299,71 @@ that produced it:
 **Happy path**
 
 ```
+$python app.py ask 'vintage graphic tee under $30' --trace
+[1] parse_query
+      in:  vintage graphic tee under $30
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Vintage Band Tee — Faded Grey … +7 more
+[3] select_item
+      in:  10 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Vintage Band Tee — Faded Grey … +7 more
+      out: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+[4] suggest_outfit
+      in:  dict with keys: selected_item, wardrobe
+      out: Here are two distinct outfit combinations built around your new Y2K butterfly baby tee, using pieces straight …
+[5] create_fit_card
+      in:  dict with keys: outfit, selected_item
+      out: Just scored this adorable butterfly baby tee for only $18 on depop, and I’m so obsessed! I styled it two ways—…
 
+  Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
+
+  Outfit:   Here are two distinct outfit combinations built around your new Y2K butterfly baby tee, using pieces straight from your wardrobe:
+
+### Outfit 1: Streetwear Contrast (Y2K Meets Grunge)
+This look plays on the contrast between the fitted, feminine butterfly tee and relaxed, edgy streetwear staples. 
+
+*   **Top:** Y2K Butterfly Baby Tee (layered over or under your white ribbed tank top for a textured neckline, if you like)
+*   **Bottoms:** Baggy straight-leg jeans (dark wash)
+*   **Outerwear:** Black cropped zip hoodie (worn open to show off the graphic)
+*   **Shoes:** Chunky white sneakers
+*   **Accessories:** Black crossbody bag
+
+**Why it works:** The dark, baggy jeans and chunky sneakers ground the sugary-sweet pink and purple butterfly print, giving it an authentic early-2000s street style feel. Adding the black cropped zip hoodie ties the dark accents of the shoes and bag together while keeping the cropped silhouette balanced.
+
+---
+
+### Outfit 2: Elevated Earth Tones (Soft Cottagecore & Minimal)
+This look leans into the softer, cottagecore-adjacent side of the tee by pairing it with warm neutrals for a more polished, everyday outfit.
+
+*   **Top:** Y2K Butterfly Baby Tee
+*   **Bottoms:** Wide-leg khaki trousers 
+*   **Accessories (Belt):** Brown leather belt (threaded through the trousers to define the waist)
+*   **Outerwear:** Vintage black denim jacket (draped over the shoulders or worn casually)
+*   **Shoes:** Chunky white sneakers (or swap for black combat boots to add a tougher edge)
+*   **Accessories (Bag):** Black crossbody bag
+
+**Why it works:** Khaki and white make a classic, clean base that lets the pink and purple tones of the butterfly graphic pop. Tucking the fitted baby tee into the high-waisted wide-leg trousers creates a flattering proportion, and the brown leather belt adds a touch of vintage warmth that bridges the gap between the white tee and tan bottoms.
+
+  Fit card: Just scored this adorable butterfly baby tee for only $18 on depop, and I’m so obsessed! I styled it two ways—first with baggy denim for that ultimate Y2K grunge look, and again with wide-leg trousers for a softer, elevated vibe. Which fit is your favorite? 🦋✨
+
+0 model calls this session, 2 served from cache
 ```
 
 **Empty search**
 
 ```
+$python app.py ask 'gold astronaut wedding dress size XXL under $2' --trace
+[1] parse_query
+      in:  gold astronaut wedding dress size XXL under $2
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: [] (empty)
 
+  I couldn't find a matching listing. Try changing the description, size, or maximum price.
+
+0 model calls this session
 ```
 
 **On the MCP move:** <!-- what changed in your code, and whether anything
@@ -313,7 +371,7 @@ behaved differently afterwards. If the rewire didn't work, say exactly where it
 broke — the error text and the last thing that worked. That earns the point in
 full. -->
 
-
+I moved `search_listings` behind MCP and changed `run_agent()` to call it through `mcp_client.call_tool` instead of calling the function directly. The search results still came back in the same format, so the rest of the agent continued to work without changes. I tested a normal query after the move and the agent still completed the full path through `suggest_outfit` and `create_fit_card`.
 
 ---
 

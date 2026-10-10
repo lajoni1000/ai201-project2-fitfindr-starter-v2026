@@ -108,7 +108,7 @@ def run_agent(query: str, wardrobe: dict) -> dict:
         than a stack trace. The import is already at the top of this file.
     """
     session = new_session(query, wardrobe)
-
+    trace.start_trace()
     count = 1
     trace.check_iterations(count)
 
@@ -134,12 +134,24 @@ def run_agent(query: str, wardrobe: dict) -> dict:
         "size": size,
         "max_price": max_price,
     }
+    trace.step(
+        "parse_query",
+        inputs=query,
+        returned=session["parsed"],
+    )
+
+
     session["search_results"] = call_tool("search_listings", {
-    "description": session["parsed"]["description"],
-    "size": session["parsed"]["size"],
-    "max_price": session["parsed"]["max_price"],
+        "description": session["parsed"]["description"],
+        "size": session["parsed"]["size"],
+        "max_price": session["parsed"]["max_price"],
     })
-    
+
+    trace.step(
+        "search_listings (via MCP)",
+        inputs=session["parsed"],
+        returned=session["search_results"],
+    )
     if not session["search_results"]:
         session["error"] = (
             "I couldn't find a matching listing. "
@@ -148,14 +160,35 @@ def run_agent(query: str, wardrobe: dict) -> dict:
         return session
     
     session["selected_item"] = session["search_results"][0]
+    trace.step(
+        "select_item",
+        inputs=session["search_results"],
+        returned=session["selected_item"],
+    )
     session["outfit_suggestion"] = suggest_outfit(
         session["selected_item"],
         session["wardrobe"],
+    )
+    trace.step(
+        "suggest_outfit",
+        inputs={
+            "selected_item": session["selected_item"],
+            "wardrobe": session["wardrobe"],
+        },
+        returned=session["outfit_suggestion"],
     )
 
     session["fit_card"] = create_fit_card(
         session["outfit_suggestion"],
         session["selected_item"],
+    )
+    trace.step(
+        "create_fit_card",
+        inputs={
+            "outfit": session["outfit_suggestion"],
+            "selected_item": session["selected_item"],
+        },
+        returned=session["fit_card"],
     )
     return session
 

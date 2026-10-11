@@ -561,15 +561,21 @@ Trace:
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Matching query completes all three tools and returns a fit card | ≥4/5 | MET (5/5) | All five tries completed `search_listings`, `suggest_outfit`, and `create_fit_card` and returned a fit card. |
+| 2 | Empty search stops before `suggest_outfit` and tells the user what to change | 5/5 | MET (5/5) | All five tries stopped after the empty search and returned a message telling the user what to change. |
+| 3 | Selected listing `id` matches the `id` received by `suggest_outfit` | 5/5 | MISSED (NOT MEASURABLE) | The selected item stayed consistent across all five tries, but the trace does not show the listing `id` at both points, so I could not verify the ID match as written. |
+| 4 | Fit card includes the correct price and platform | 5/5 | MET (5/5) | All five tries kept the correct price and platform in the fit card. |
+| 5 | Search results respect the requested size and maximum price | ≥4/5 | MISSED (NOT MEASURABLE) | The search returned two results in all five tries, but the log does not show the size and price of every returned listing, so I could not verify the criterion as written. 
 
 **Diagnoses**
 
+**Criterion 3 — MISSED (UNPROVEN).**  
+The issue is in the session/trace visibility, not an observed wrong item. The criterion compares the `id` of the selected listing with the `id` received by `suggest_outfit`, but the trace does not show those values. It only shows the selected item by title, price, and platform, and summarizes the `suggest_outfit` input as `dict with keys: selected_item, wardrobe`. Because the IDs are not visible at both steps, I could not verify the criterion as written.
 
+**Criterion 5 — MISSED (UNPROVEN).**  
+The issue is in the `search_listings` trace output. The query requested size M and a maximum price of $30, and two listings were returned, but the trace only shows their titles. It does not show the size and price of every returned listing. Because those fields are not visible, I could not verify that every result met both filters.
+
+**Pattern:** Both misses are observability problems rather than observed incorrect behavior from the agent. The test ran successfully, but the trace does not expose all the fields needed to verify Criteria 3 and 5 directly. A useful improvement would be to include the listing `id`, size, and price in the trace so these criteria can be measured from the test output.
 
 ---
 

@@ -217,6 +217,13 @@ Nothing beats the effortless cool of these vintage Levi's 501 jeans, complete wi
 - *What came back:* We identified that after `search_listings`, the agent needed an explicit branch for an empty result instead of continuing to the outfit and fit-card tools.
 - *What I changed:* I added the branch so that an empty search stores an actionable error message in the session and returns immediately. For a successful search, I store the first result in `session["selected_item"]` and use the session values for the next tool calls. I tested both paths and confirmed that the no-match path stops with `fit_card` still set to `None`.
 
+
+**Moment 3**
+
+- *What I asked for:* After running my acceptance criteria, I asked Claude to help me understand why I could not verify Criteria 3 and 5 from the trace even though the agent appeared to be working correctly.
+- *What came back:* We found that the `_short()` function in `trace.py` was hiding some of the information I needed for evaluation. It showed listing titles, but not the `id`, size, and price needed to verify those two criteria.
+- *What I changed:* I modified `_short()` so the trace also shows the listing `id`, size, and price, and the selected item's `id` when it is passed to `suggest_outfit`. I then ran the full evaluation again and confirmed that Criteria 3 and 5 were directly measurable from the trace.
+
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
      Don't fill these in during unit 3.
@@ -679,6 +686,7 @@ I moved `search_listings` behind MCP and changed `run_agent()` to call it throug
 
 I updated the `_short()` function in `trace.py` so the trace shows the listing `id`, size, and price instead of only the listing title. I also made the selected item's `id` visible when it is passed to `suggest_outfit`.
 
+
 **Which failure it was meant to fix:**
 
 This change was meant to fix the observability problem I found in Criteria 3 and 5. In the before run, I could see that the agent was selecting and returning listings, but the trace did not show enough information to verify that the same listing `id` reached `suggest_outfit` or that every search result matched the requested size and maximum price.
@@ -840,7 +848,13 @@ Yes. The change made Criteria 3 and 5 directly measurable from the trace. For Cr
      you did. "I ran out of time" is fine if it's true. Pretending nothing is
      left is not. -->
 
+All five acceptance criteria were met in the after run, so there are no criteria still missed. However, the testing showed me that passing all of my criteria does not mean the system has nothing left to improve.
 
+One thing I would reconsider in a future evaluation is Criterion 1. It required the agent to complete all three tool calls and return a fit card in at least 4 of 5 tries, but it passed 5 of 5 in both the before and after runs. I could make this criterion stricter by requiring 5 of 5 successful runs, or by adding a quality requirement for the fit card instead of only checking that one was produced.
+
+I also found a limitation during failure-mode testing. When the model was unavailable, the agent handled the error without crashing, but the message included technical information about the API key that would be more useful to a developer than to a regular user. I would improve this by showing a simpler user-facing message while keeping the technical details in the logs.
+
+I stopped here because the improvement I chose for this test cycle addressed the observability problem identified in Criteria 3 and 5. I wanted to make and measure one change at a time.
 
 <!-- ═════════════════════════════════════════════════════════════════════
 

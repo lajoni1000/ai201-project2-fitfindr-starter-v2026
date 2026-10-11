@@ -223,7 +223,7 @@ Nothing beats the effortless cool of these vintage Levi's 501 jeans, complete wi
      ═══════════════════════════════════════════════════════════════════ -->
 
 ---
-
+```
 ## Run Log — Before
 
 <!-- Five criteria, five tries each, in this exact format.
@@ -239,15 +239,16 @@ Nothing beats the effortless cool of these vintage Levi's 501 jeans, complete wi
 |---|---|---|---|---|---|---|---|
 | 1. Matching query completes all three tools | At least 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET |
 | 2. Impossible query stops before the second tool | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET |
-| 3. Selected listing ID matches the ID received by suggest_outfit | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET |
+| 3. Selected listing ID matches the ID received by suggest_outfit | 5 of 5 | FAIL | FAIL | FAIL | FAIL | FAIL | MISSED |
 | 4. Fit card includes the correct price and platform | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET |
-| 5. Search results respect size and maximum price | At least 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET |
+| 5. Search results respect size and maximum price | At least 4 of 5 | FAIL | FAIL | FAIL | FAIL | FAIL | MISSED |
+
 
 
 **Real output from one try**, pasted as text, naming the file and function
 that produced it:
 
-```
+
 ### Criterion 1 — Matching query completes all three tools
 Source: results/run_2026-10-11_1059_before.md
 Produced by: run_eval.py::main
@@ -540,7 +541,8 @@ Trace:
 
 
 ---
-
+```
+```
 ## Verdicts and Diagnoses
 
 <!-- MET or MISSED per criterion against LAST UNIT's target, plus a sentence on
@@ -578,7 +580,8 @@ The issue is in the `search_listings` trace output. The query requested size M a
 **Pattern:** Both misses are observability problems rather than observed incorrect behavior from the agent. The test ran successfully, but the trace does not expose all the fields needed to verify Criteria 3 and 5 directly. A useful improvement would be to include the listing `id`, size, and price in the trace so these criteria can be measured from the test output.
 
 ---
-
+```
+```
 ## Loop Trace
 
 <!-- One full run, printed step by step, with the MCP call visible in it.
@@ -672,29 +675,160 @@ I moved `search_listings` behind MCP and changed `run_agent()` to call it throug
 
 ## The Improvement
 
-<!-- What you changed, why your diagnosis pointed at it, and the after-run in
-     the same table format. One change, measured properly.
-
-     `python run_eval.py --label after` -->
-
 **What I changed:**
 
+I updated the `_short()` function in `trace.py` so the trace shows the listing `id`, size, and price instead of only the listing title. I also made the selected item's `id` visible when it is passed to `suggest_outfit`.
+
 **Which failure it was meant to fix:**
+
+This change was meant to fix the observability problem I found in Criteria 3 and 5. In the before run, I could see that the agent was selecting and returning listings, but the trace did not show enough information to verify that the same listing `id` reached `suggest_outfit` or that every search result matched the requested size and maximum price.
 
 ### Run Log — After
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. Matching query completes all three tools and returns a fit card | ≥4/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Empty search stops before `suggest_outfit` and tells the user what to change | 5/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. Selected listing `id` matches the `id` received by `suggest_outfit` | 5/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card includes the correct price and platform | 5/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Search results respect the requested size and maximum price | ≥4/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+
+**Evidence from the After Run**
+The following trace output shows the fields that were missing in the before run.
+
+**Criterion 3 — Selected item state**
+Source file: `results/run_2026-10-11_1509_after.md`  
+Agent function: `agent.py::run_agent`
+**Try 1**
+
+- stopped early: no
+- selected_item: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+- search_results: 10
+
+Outfit suggestion:
+
+```
+Here are two outfit combinations built around your new Y2K butterfly baby tee, using pieces straight from your wardrobe:
+
+### Outfit 1: Streetwear Contrast
+*This look leans into the Y2K streetwear vibe by pairing the ultra-feminine, fitted baby tee with heavy-duty denim and chunky sneakers for that classic 2000s contrast.*
+
+*   **Top:** Y2K Butterfly Baby Tee (New item)
+*   **Bottoms:** Baggy straight-leg jeans, dark wash
+*   **Outerwear:** Black cropped zip hoodie (worn open or carried)
+*   **Shoes:** Chunky white sneakers
+*   **Accessories:** Black crossbody bag
+
+**Why it works:** The fitted crop of the baby tee balances out the baggy, low-slung look of the dark wash jeans. Tying the black cropped zip hoodie around your waist or layering it over top adds depth, while the chunky white sneakers tie in the white from the tee's base color. 
+
+***
+
+### Outfit 2: Casual Earth-Tone Mix
+*This outfit blends the playful, cottagecore-leaning butterfly print with minimalist earth tones for an easy, everyday look that feels grounded yet vintage.*
+
+*   **Top:** Y2K Butterfly Baby Tee (New item)
+*   **Bottoms:** Wide-leg khaki trousers 
+*   **Outerwear:** Vintage black denim jacket
+*   **Shoes:** Black combat boots
+*   **Accessories:** Brown leather belt, Black crossbody bag
+
+**Why it works:** Pairing the pink and purple butterfly tee with tan wide-leg trousers creates a nice contrast between soft pastel graphics and neutral earth tones. Tucking in the baby tee and wearing the brown leather belt pulls the waist in, while the vintage black denim jacket and black combat boots add a bit of edgy, grunge-inspired texture to the outfit.
+```
+
+Fit card:
+
+```
+Just scored this Y2K butterfly baby tee on Depop for only $18, and I am obsessed with how it fits! I styled it with baggy denim and chunky sneaks for the ultimate Y2K streetwear contrast, but it also looks so good dressed down with earth tones. Run, don't walk, to grab your next favorite vintage piece! ✨🦋
+```
+
+Trace:
+
+```
+[1] parse_query
+      in:  vintage graphic tee under $30
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 10 items: Y2K Baby Tee — Butterfly Print [id=lst_002, size=S/M, price=$18.0], Graphic Tee — 2003 Tour Bootleg Style [id=lst_006, size=L, price=$24.0], Vintage Band Tee — Faded Grey [id=lst_033, size=L, price=$19.0] … +7 more
+[3] select_item
+      in:  10 items: Y2K Baby Tee — Butterfly Print [id=lst_002, size=S/M, price=$18.0], Graphic Tee — 2003 Tour Bootleg Style [id=lst_006, size=L, price=$24.0], Vintage Band Tee — Faded Grey [id=lst_033, size=L, price=$19.0] … +7 more
+      out: Y2K Baby Tee — Butterfly Print [id=lst_002, size=S/M, price=$18.0, platform=depop]
+[4] suggest_outfit
+      in:  selected_item=Y2K Baby Tee — Butterfly Print [id=lst_002, size=S/M, price=$18.0, platform=depop]
+      out: Here are two outfit combinations built around your new Y2K butterfly baby tee, using pieces straight from your…
+[5] create_fit_card
+      in:  selected_item=Y2K Baby Tee — Butterfly Print [id=lst_002, size=S/M, price=$18.0, platform=depop]
+      out: Just scored this Y2K butterfly baby tee on Depop for only $18, and I am obsessed with how it fits! I styled it…
+```
+**Criterion 5 — Size and price filters**
+Source file: results/run_2026-10-11_1509_after.md
+Agent function: agent.py::run_agent
+**Try 1**
+
+- stopped early: no
+- selected_item: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+- search_results: 2
+
+Outfit suggestion:
+
+```
+Here are two distinct outfit combinations built around your new Y2K butterfly baby tee, using pieces straight from your wardrobe:
+
+### Outfit 1: Streetwear Contrast (Y2K Meets Edgy Grunge)
+*This look leans into the classic 2000s contrast of a super-feminine top paired with baggy, relaxed bottoms and edgy footwear.*
+
+*   **Top:** Y2K Baby Tee — Butterfly Print (layered underneath your black cropped zip hoodie left partially unzipped)
+*   **Bottoms:** Baggy straight-leg jeans, dark wash (secured with the Brown leather belt)
+*   **Shoes:** Chunky white sneakers
+*   **Accessories:** Black crossbody bag
+
+**Why it works:** The fitted, pastel butterfly graphic pops against the dark wash denim and the black zip-up. Wearing the hoodie open highlights the baby tee's cropped length, while the chunky sneakers and baggy jeans pull the whole Y2K streetwear vibe together.
+
+---
+
+### Outfit 2: Casual Earth-Tone Mix (Soft Vintage Cottagecore)
+*This look pulls out the softer, vintage side of the baby tee by pairing it with warm neutrals and classic outerwear.*
+
+*   **Top:** Y2K Baby Tee — Butterfly Print (worn solo as the statement piece)
+*   **Bottoms:** Wide-leg khaki trousers (with the Brown leather belt)
+*   **Outerwear:** Vintage black denim jacket (worn casually over the shoulders or on)
+*   **Shoes:** Chunky white sneakers (or switch to Black combat boots if you want a grungier finish)
+*   **Accessories:** Black crossbody bag
+
+**Why it works:** Pairing the white, pink, and purple tee with the tan wide-leg trousers grounds the outfit in effortless neutrals, letting the butterfly graphic stand out. Throwing on the vintage black denim jacket adds a cool-girl textural contrast that balances the sweetness of the top.
+```
+
+Fit card:
+
+```
+Just scored this dreamy butterfly Y2K baby tee on Depop for just $18 and I am obsessed! Styled it today with baggy dark-wash jeans and a zip hoodie for the ultimate edgy streetwear look. ✨🦋 #thrifted #y2kstyle
+```
+
+Trace:
+
+```
+[1] parse_query
+      in:  graphic tee size M under $30
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 2 items: Y2K Baby Tee — Butterfly Print [id=lst_002, size=S/M, price=$18.0], Mesh Long-Sleeve Top — Black [id=lst_017, size=S/M, price=$15.0]
+[3] select_item
+      in:  2 items: Y2K Baby Tee — Butterfly Print [id=lst_002, size=S/M, price=$18.0], Mesh Long-Sleeve Top — Black [id=lst_017, size=S/M, price=$15.0]
+      out: Y2K Baby Tee — Butterfly Print [id=lst_002, size=S/M, price=$18.0, platform=depop]
+[4] suggest_outfit
+      in:  selected_item=Y2K Baby Tee — Butterfly Print [id=lst_002, size=S/M, price=$18.0, platform=depop]
+      out: Here are two distinct outfit combinations built around your new Y2K butterfly baby tee, using pieces straight …
+[5] create_fit_card
+      in:  selected_item=Y2K Baby Tee — Butterfly Print [id=lst_002, size=S/M, price=$18.0, platform=depop]
+      out: Just scored this dreamy butterfly Y2K baby tee on Depop for just $18 and I am obsessed! Styled it today with b…
+```
+
+
 
 **Did it help, and how do I know:**
 
-<!-- If it made things worse, say that. Honestly reported, that earns full
-     credit and is more interesting than one that worked. -->
+Yes. The change made Criteria 3 and 5 directly measurable from the trace. For Criterion 3, all five tries showed the same listing `id` at `select_item` and when the item was passed to `suggest_outfit`. For Criterion 5, all five tries returned two listings for the size M, under $30 query, and the trace showed that both were size S/M and priced at $18 and $15. The agent's behavior did not change; the improvement made the existing behavior visible enough to test against my criteria.
 
 
 

@@ -68,18 +68,56 @@ def get_trace() -> str:
     """The whole trace as text, ready to paste into your README."""
     return "\n".join(_lines)
 
-
 def _short(value, limit: int = 110) -> str:
-    """Keep the trace readable. A 40-item list of dicts is not readable."""
+    """Keep the trace readable while preserving fields needed for evaluation."""
     if isinstance(value, list):
         if not value:
             return "[] (empty)"
         head = value[0]
         if isinstance(head, dict) and "title" in head:
-            titles = ", ".join(str(v.get("title", "?")) for v in value[:3])
+            listings = ", ".join(
+                f"{v.get('title', '?')} "
+                f"[id={v.get('id')}, size={v.get('size')}, price=${v.get('price')}]"
+                for v in value[:3]
+            )
             more = f" … +{len(value) - 3} more" if len(value) > 3 else ""
-            return f"{len(value)} items: {titles}{more}"
+            return f"{len(value)} items: {listings}{more}"
         return f"{len(value)} items: {str(head)[:60]}…"
+
+    if isinstance(value, dict):
+        if "title" in value:
+            return (
+                f"{value.get('title')} "
+                f"[id={value.get('id')}, size={value.get('size')}, "
+                f"price=${value.get('price')}, platform={value.get('platform')}]"
+            )
+
+        if "selected_item" in value and isinstance(value["selected_item"], dict):
+            item = value["selected_item"]
+            return (
+                f"selected_item={item.get('title')} "
+                f"[id={item.get('id')}, size={item.get('size')}, "
+                f"price=${item.get('price')}, platform={item.get('platform')}]"
+            )
+
+        keys = ", ".join(list(value)[:6])
+        return f"dict with keys: {keys}"
+
+    text = str(value).replace("\n", " ")
+    return text if len(text) <= limit else text[:limit] + "…"
+
+# This is the first 
+#def _short(value, limit: int = 110) -> str:
+#    """Keep the trace readable. A 40-item list of dicts is not readable."""
+#    if isinstance(value, list):
+#        if not value:
+#            return "[] (empty)"
+#        head = value[0]
+#        if isinstance(head, dict) and "title" in head:
+#            titles = ", ".join(str(v.get("title", "?")) for v in value[:3])
+#            more = f" … +{len(value) - 3} more" if len(value) > 3 else ""
+#            return f"{len(value)} items: {titles}{more}"
+#        return f"{len(value)} items: {str(head)[:60]}…"
 
     if isinstance(value, dict):
         if "title" in value:
